@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>gmaps.nearBy</title>
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+  <script type="text/javascript" src="https://raw.github.com/HPNeo/gmaps/master/gmaps.js"></script>
+  <script type="text/javascript" src="../lib/gmaps.nearBy.js"></script>
+  <script type="text/javascript">
+    var map, ordered_markers;
+
+    var nearBy = function(radius) {
+      radius = radius;
+      $ordered_markers = $('#ordered_markers');
+
+      ordered_markers = map.nearBy({
+        from : map.markers[0].getPosition(),
+        within : radius
+      });
+
+      $ordered_markers.html('');
+
+      for(var i = 0; i < ordered_markers.length; i++) {
+        var marker = ordered_markers[i];
+
+        $ordered_markers.append('<li><a href="#" class="marker" data-marker-index="' + i + '">' + marker.title + ' (' + marker.distance + 'm)</a></li>');
+      }
+    };
+
+    $(document).on('click', '#nearBy', function(e) {
+      e.preventDefault();
+
+      $radius = parseFloat($('#current_radius').text());
+
+      nearBy($radius / 1000);
+    });
+
+    $(document).on('click', '.marker', function(e) {
+      e.preventDefault();
+
+      var index = $(this).data('marker-index');
+
+      var marker = ordered_markers[index];
+
+      marker.setAnimation(google.maps.Animation.BOUNCE);
+    });
+
+    $(document).ready(function() {
+      map = new GMaps({
+        el: '#map',
+        lat: -12.0440884729918,
+        lng: -77.0268631494598,
+        zoom: 17,
+        click: function(e) {
+          map.addMarker({
+            lat: e.latLng.lat(),
+            lng: e.latLng.lng(),
+            draggable: true,
+            title : 'Marker #' + map.markers.length
+          })
+        }
+      });
+
+      map.addMarker({
+        lat: -12.0440884729918,
+        lng: -77.0268631494598,
+        title: 'Origin'
+      });
+
+      map.drawCircle({
+        lat: -12.0440884729918,
+        lng: -77.0268631494598,
+        radius: 100,
+        strokeColor: '#5588bb',
+        fillColor: '#5588bb',
+        editable: true,
+        zIndex: -1,
+        radius_changed: function() {
+          nearBy(this.getRadius());
+        }
+      });
+    });
+    
+  </script>
+</head>
+<body>
+  <small><strong>Hint: </strong>Click on the map to create markers</small>
+  <small><strong>Current radius:</strong> <span id="current_radius">100</span>m</small>
+  <div class="map" id="map"></div>
+  <a href="#" id="nearBy">Order by distance</a>
+  <ul id="ordered_markers"></ul>
+</body>
+</html>
